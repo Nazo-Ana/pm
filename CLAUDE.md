@@ -36,6 +36,14 @@ Backend tests (from repo root):
 
 ```bash
 python -m pytest backend/tests/
+python -m pytest backend/tests/test_api.py::test_auth_and_board_persistence   # single test
+```
+
+Frontend single test:
+
+```bash
+npx vitest run -t "test name"          # single vitest test by name
+npx playwright test tests/kanban.spec.ts   # single e2e spec
 ```
 
 ### Docker
@@ -67,7 +75,7 @@ Browser → FastAPI (`backend/main.py`) → SQLite (`data/pm.db`)
 
 - `POST /api/auth/login` — validates credentials, returns a `SESSION_TOKEN` (generated fresh each server start, in-memory only).
 - `GET /api/board` / `PUT /api/board` — load and save the board JSON for the authenticated user.
-- `POST /api/chat` — sends user message + board state + history to OpenRouter, applies returned actions to the board, persists updated board and chat history.
+- `POST /api/chat` — sends user message + board state + history to OpenRouter (`openai/gpt-oss-120b`, forced JSON output), applies returned actions to the board via `apply_actions()`, persists updated board and chat history (last 10 messages sent as context).
 - Static frontend files are served from `frontend/out/` by FastAPI's `StaticFiles` + a catch-all route.
 
 ### Backend modules
@@ -78,6 +86,8 @@ Browser → FastAPI (`backend/main.py`) → SQLite (`data/pm.db`)
 | `backend/database.py` | SQLAlchemy models (`User`, `Board`, `ChatMessage`), `init_db()`, default board seed |
 | `backend/schemas.py` | Pydantic models for request/response validation |
 | `backend/ai_service.py` | `call_ai()` — OpenRouter HTTP call, returns `(message, actions)` |
+
+The AI's action vocabulary (`apply_actions()` in `main.py`) is fixed: `create_card`, `update_card`, `delete_card`, `move_card`, `rename_column`. The system prompt in `ai_service.py` enumerates these for the model; extending the AI's capabilities means updating both the prompt and `apply_actions()` together.
 
 ### Database
 

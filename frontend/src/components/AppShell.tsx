@@ -12,8 +12,11 @@ export const AppShell = () => {
   const [checking, setChecking] = useState(true);
 
   useEffect(() => {
-    if (!sessionStorage.getItem("pm-token")) { setChecking(false); return; }
-    api.board().then(setBoard).catch(() => sessionStorage.removeItem("pm-token")).finally(() => setChecking(false));
+    const token = sessionStorage.getItem("pm-token");
+    const check = token
+      ? api.board().then(setBoard).catch(() => sessionStorage.removeItem("pm-token"))
+      : Promise.resolve();
+    check.finally(() => setChecking(false));
   }, []);
 
   const login = async (username: string, password: string) => {
