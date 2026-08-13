@@ -1,9 +1,12 @@
 import clsx from "clsx";
 import { useDroppable } from "@dnd-kit/core";
 import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable";
+import { useEffect, useRef, useState } from "react";
 import type { Card, Column } from "@/lib/kanban";
 import { KanbanCard } from "@/components/KanbanCard";
 import { NewCardForm } from "@/components/NewCardForm";
+
+const RENAME_DEBOUNCE_MS = 500;
 
 type KanbanColumnProps = {
   column: Column;
@@ -23,6 +26,32 @@ export const KanbanColumn = ({
   onEditCard,
 }: KanbanColumnProps) => {
   const { setNodeRef, isOver } = useDroppable({ id: column.id });
+  const [title, setTitle] = useState(column.title);
+  const [syncedTitle, setSyncedTitle] = useState(column.title);
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  if (column.title !== syncedTitle) {
+    setSyncedTitle(column.title);
+    setTitle(column.title);
+  }
+
+  useEffect(() => () => {
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+  }, []);
+
+  const handleTitleChange = (value: string) => {
+    setTitle(value);
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => onRename(column.id, value), RENAME_DEBOUNCE_MS);
+  };
+
+  const flushRename = () => {
+    if (debounceRef.current) {
+      clearTimeout(debounceRef.current);
+      debounceRef.current = null;
+    }
+    if (title !== column.title) onRename(column.id, title);
+  };
 
   return (
     <section
@@ -42,8 +71,9 @@ export const KanbanColumn = ({
             </span>
           </div>
           <input
-            value={column.title}
-            onChange={(event) => onRename(column.id, event.target.value)}
+            value={title}
+            onChange={(event) => handleTitleChange(event.target.value)}
+            onBlur={flushRename}
             className="mt-3 w-full bg-transparent font-display text-lg font-semibold text-cyan-50 outline-none"
             aria-label="Column title"
           />

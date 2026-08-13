@@ -5,6 +5,7 @@ from pathlib import Path
 from fastapi import Depends, FastAPI, Header, HTTPException
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
+from pydantic import ValidationError
 from sqlalchemy.orm import Session
 
 from .ai_service import AIServiceError, call_ai
@@ -28,7 +29,7 @@ def current_user(
     authorization: str | None = Header(default=None),
     db: Session = Depends(get_db),
 ) -> User:
-    if authorization != f"Bearer {SESSION_TOKEN}":
+    if authorization is None or not secrets.compare_digest(authorization, f"Bearer {SESSION_TOKEN}"):
         raise HTTPException(status_code=401, detail="Authentication required")
     user = db.query(User).filter_by(username="user").first()
     if user is None:
@@ -59,7 +60,8 @@ def apply_actions(board: BoardData, actions: list[dict]) -> BoardData:
             if str(action.get("title", "")).strip():
                 data.cards[card_id].title = str(action["title"]).strip()
             if "details" in action:
-                data.cards[card_id].details = str(action["details"])
+                details = action.get("details")
+                data.cards[card_id].details = "" if details is None else str(details)
         elif kind == "delete_card" and card_id in data.cards:
             del data.cards[card_id]
             for column in data.columns:
@@ -112,7 +114,10 @@ def chat(request: ChatRequest, user: User = Depends(current_user), db: Session =
         message, actions = call_ai(request.message, board.model_dump(), history)
     except AIServiceError as error:
         raise HTTPException(status_code=502, detail=str(error)) from error
-    updated = apply_actions(board, actions)
+    try:
+        updated = apply_actions(board, actions)
+    except ValidationError as error:
+        raise HTTPException(status_code=502, detail="OpenRouter returned an invalid response") from error
     board_record.data = updated.model_dump_json()
     db.add_all([
         ChatMessage(board_id=board_record.id, role="user", content=request.message),
@@ -122,7 +127,7 @@ def chat(request: ChatRequest, user: User = Depends(current_user), db: Session =
     return ChatResponse(message=message, board=updated)
 
 
-frontend = Path(__file__).resolve().parents[1] / "frontend" / "out"
+frontend = (Path(__file__).resolve().parents[1] / "frontend" / "out").resolve()
 if frontend.exists():
     assets = frontend / "_next"
     if assets.exists():
@@ -130,11 +135,14 @@ if frontend.exists():
 
     @app.get("/{path:path}", include_in_schema=False)
     def static_app(path: str):
-        requested = frontend / path
-        if requested.is_file():
-            return FileResponse(requested)
-        nested_index = requested / "index.html"
-        return FileResponse(nested_index if nested_index.is_file() else frontend / "index.html")
+        requested = (frontend / path).resolve()
+        if requested.is_relative_to(frontend):
+            if requested.is_file():
+                return FileResponse(requested)
+            nested_index = requested / "index.html"
+            if nested_index.is_file():
+                return FileResponse(nested_index)
+        return FileResponse(frontend / "index.html")
 else:
     @app.get("/", include_in_schema=False)
     def root() -> dict[str, str]:
