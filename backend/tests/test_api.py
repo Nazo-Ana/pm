@@ -2,9 +2,22 @@ import os
 
 os.environ["DATABASE_URL"] = "sqlite:///:memory:"
 
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
+from sqlalchemy.pool import StaticPool
+import backend.database as db_module
+
+_engine = create_engine(
+    "sqlite:///:memory:",
+    connect_args={"check_same_thread": False},
+    poolclass=StaticPool,
+)
+db_module.engine = _engine
+db_module.SessionLocal = sessionmaker(bind=_engine, expire_on_commit=False)
+
 from fastapi.testclient import TestClient
 
-from backend.database import Base, engine
+from backend.database import Base, init_db
 from backend.main import app
 
 
@@ -15,7 +28,8 @@ def login(client: TestClient) -> dict[str, str]:
 
 
 def test_auth_and_board_persistence():
-    Base.metadata.drop_all(engine)
+    Base.metadata.drop_all(_engine)
+    init_db()
     with TestClient(app) as client:
         headers = login(client)
         board = client.get("/api/board", headers=headers).json()
@@ -25,6 +39,8 @@ def test_auth_and_board_persistence():
 
 
 def test_invalid_login_is_rejected():
+    Base.metadata.drop_all(_engine)
+    init_db()
     with TestClient(app) as client:
         response = client.post("/api/auth/login", json={"username": "user", "password": "wrong"})
         assert response.status_code == 401
