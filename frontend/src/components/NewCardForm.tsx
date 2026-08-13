@@ -30,7 +30,7 @@ export const NewCardForm = ({ onAdd }: NewCardFormProps) => {
               setFormState((prev) => ({ ...prev, title: event.target.value }))
             }
             placeholder="Card title"
-            className="w-full rounded-xl border border-[var(--stroke)] bg-white px-3 py-2 text-sm font-medium text-[var(--navy-dark)] outline-none transition focus:border-[var(--primary-blue)]"
+            className="w-full rounded-xl border border-cyan-300/15 bg-[#071c3a]/75 px-3 py-2 text-sm font-medium text-cyan-50 outline-none transition placeholder:text-slate-500 focus:border-[var(--primary-blue)]"
             required
           />
           <textarea
@@ -40,7 +40,7 @@ export const NewCardForm = ({ onAdd }: NewCardFormProps) => {
             }
             placeholder="Details"
             rows={3}
-            className="w-full resize-none rounded-xl border border-[var(--stroke)] bg-white px-3 py-2 text-sm text-[var(--gray-text)] outline-none transition focus:border-[var(--primary-blue)]"
+            className="w-full resize-none rounded-xl border border-cyan-300/15 bg-[#071c3a]/75 px-3 py-2 text-sm text-slate-200 outline-none transition placeholder:text-slate-500 focus:border-[var(--primary-blue)]"
           />
           <div className="flex items-center gap-2">
             <button
@@ -55,7 +55,7 @@ export const NewCardForm = ({ onAdd }: NewCardFormProps) => {
                 setIsOpen(false);
                 setFormState(initialFormState);
               }}
-              className="rounded-full border border-[var(--stroke)] px-3 py-2 text-xs font-semibold uppercase tracking-wide text-[var(--gray-text)] transition hover:text-[var(--navy-dark)]"
+              className="rounded-full border border-cyan-300/15 px-3 py-2 text-xs font-semibold uppercase tracking-wide text-slate-400 transition hover:bg-cyan-400/10 hover:text-cyan-50"
             >
               Cancel
             </button>
@@ -65,7 +65,7 @@ export const NewCardForm = ({ onAdd }: NewCardFormProps) => {
         <button
           type="button"
           onClick={() => setIsOpen(true)}
-          className="w-full rounded-full border border-dashed border-[var(--stroke)] px-3 py-2 text-xs font-semibold uppercase tracking-wide text-[var(--primary-blue)] transition hover:border-[var(--primary-blue)]"
+          className="w-full rounded-full border border-dashed border-cyan-300/15 px-3 py-2 text-xs font-semibold uppercase tracking-wide text-sky-300 transition hover:border-[var(--primary-blue)] hover:bg-cyan-400/10"
         >
           Add a card
         </button>

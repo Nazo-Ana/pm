@@ -6,10 +6,10 @@
   --secondary-purple: #753991;
   --navy-dark: #032147;
   --gray-text: #888888;
-  --surface: #f7f8fb;
-  --surface-strong: #ffffff;
-  --stroke: rgba(3, 33, 71, 0.08);
-  --shadow: 0 18px 40px rgba(3, 33, 71, 0.12);
+  --surface: rgba(7, 28, 58, 0.72);
+  --surface-strong: rgba(5, 24, 52, 0.82);
+  --stroke: rgba(92, 206, 255, 0.18);
+  --shadow: 0 24px 60px rgba(0, 5, 20, 0.36);
 }
 
 @theme inline {
@@ -23,10 +23,25 @@
 }
 
 body {
-  background: var(--surface);
+  background: #020d1e;
   color: var(--navy-dark);
   font-family: var(--font-body), "Segoe UI", sans-serif;
   margin: 0;
+  min-height: 100vh;
+}
+
+button,
+input,
+textarea {
+  font: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+button:disabled {
+  cursor: not-allowed;
 }
 
 .font-display {
