@@ -2,6 +2,10 @@ import secrets
 from contextlib import asynccontextmanager
 from pathlib import Path
 
+from dotenv import load_dotenv
+
+load_dotenv()
+
 from fastapi import Depends, FastAPI, Header, HTTPException
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
@@ -91,9 +95,16 @@ def login(request: LoginRequest, db: Session = Depends(get_db)) -> LoginResponse
     return LoginResponse(token=SESSION_TOKEN, username=user.username)
 
 
+def load_board(record: Board) -> BoardData:
+    try:
+        return BoardData.model_validate_json(record.data)
+    except ValidationError as error:
+        raise HTTPException(status_code=409, detail="board_data_invalid") from error
+
+
 @app.get("/api/board", response_model=BoardData)
 def get_board(user: User = Depends(current_user), db: Session = Depends(get_db)) -> BoardData:
-    return BoardData.model_validate_json(user_board(user, db).data)
+    return load_board(user_board(user, db))
 
 
 @app.put("/api/board", response_model=BoardData)
@@ -107,7 +118,7 @@ def save_board(payload: BoardData, user: User = Depends(current_user), db: Sessi
 @app.post("/api/chat", response_model=ChatResponse)
 def chat(request: ChatRequest, user: User = Depends(current_user), db: Session = Depends(get_db)) -> ChatResponse:
     board_record = user_board(user, db)
-    board = BoardData.model_validate_json(board_record.data)
+    board = load_board(board_record)
     history_records = db.query(ChatMessage).filter_by(board_id=board_record.id).order_by(ChatMessage.id.desc()).limit(10).all()
     history = [{"role": item.role, "content": item.content} for item in reversed(history_records)]
     try:
