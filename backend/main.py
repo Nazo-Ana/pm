@@ -75,7 +75,8 @@ def apply_actions(board: BoardData, actions: list[dict]) -> BoardData:
                 column.cardIds = [item for item in column.cardIds if item != card_id]
             position = action.get("position")
             target = columns[column_id].cardIds
-            index = len(target) if not isinstance(position, int) else max(0, min(position, len(target)))
+            has_position = isinstance(position, int) and not isinstance(position, bool)
+            index = max(0, min(position, len(target))) if has_position else len(target)
             target.insert(index, card_id)
         elif kind == "rename_column" and column_id in columns and str(action.get("title", "")).strip():
             columns[column_id].title = str(action["title"]).strip()

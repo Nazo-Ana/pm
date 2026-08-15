@@ -1,5 +1,14 @@
 import type { BoardData } from "@/lib/kanban";
 
+export class ApiError extends Error {
+  status: number;
+
+  constructor(status: number, message: string) {
+    super(message);
+    this.status = status;
+  }
+}
+
 const request = async <T>(path: string, init: RequestInit = {}): Promise<T> => {
   const token = sessionStorage.getItem("pm-token");
   const response = await fetch(path, {
@@ -12,7 +21,7 @@ const request = async <T>(path: string, init: RequestInit = {}): Promise<T> => {
   });
   if (!response.ok) {
     const body = (await response.json().catch(() => null)) as { detail?: string } | null;
-    throw new Error(body?.detail ?? "Request failed");
+    throw new ApiError(response.status, body?.detail ?? "Request failed");
   }
   return response.json() as Promise<T>;
 };

@@ -35,6 +35,15 @@ export const KanbanColumn = ({
     setTitle(column.title);
   }
 
+  // Cancel any pending debounced save whenever the title changes externally
+  // (e.g. an AI-driven rename), so a stale keystroke can't overwrite it later.
+  useEffect(() => {
+    if (debounceRef.current) {
+      clearTimeout(debounceRef.current);
+      debounceRef.current = null;
+    }
+  }, [column.title]);
+
   useEffect(() => () => {
     if (debounceRef.current) clearTimeout(debounceRef.current);
   }, []);

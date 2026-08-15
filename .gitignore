@@ -177,6 +177,7 @@ cython_debug/
 # Project-local generated files
 /Lib/
 scripts/*.exe
+**/.venv_test
 /Include/
 /pyvenv.cfg
 *.db

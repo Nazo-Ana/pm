@@ -23,6 +23,8 @@ def call_ai(user_message: str, board: dict, history: list[dict]) -> tuple[str, l
         "create_card(column_id,title,details), update_card(card_id,title?,details?), "
         "move_card(card_id,column_id,position?), delete_card(card_id), and "
         "rename_column(column_id,title). Use only IDs from the board except for newly created cards. "
+        "Card titles must be 200 characters or fewer, card details 4000 characters or fewer, "
+        "and column titles 100 characters or fewer. "
         f"Current board: {json.dumps(board, separators=(',', ':'))}"
     )
     messages = [{"role": "system", "content": system}, *history[-10:], {"role": "user", "content": user_message}]

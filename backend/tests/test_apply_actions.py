@@ -96,6 +96,23 @@ def test_move_card_between_columns_with_position():
     assert result.columns[1].cardIds == ["card-1"]
 
 
+def test_move_card_treats_boolean_position_as_no_position():
+    board = BoardData.model_validate(
+        {
+            "columns": [
+                {"id": "col-a", "title": "A", "cardIds": ["card-1", "card-2", "card-3"]},
+            ],
+            "cards": {
+                "card-1": {"id": "card-1", "title": "One", "details": ""},
+                "card-2": {"id": "card-2", "title": "Two", "details": ""},
+                "card-3": {"id": "card-3", "title": "Three", "details": ""},
+            },
+        }
+    )
+    result = apply_actions(board, [{"action": "move_card", "card_id": "card-3", "column_id": "col-a", "position": True}])
+    assert result.columns[0].cardIds == ["card-1", "card-2", "card-3"]
+
+
 def test_move_card_ignored_for_unknown_card():
     result = apply_actions(make_board(), [{"action": "move_card", "card_id": "missing", "column_id": "col-b"}])
     assert result == make_board()
